@@ -31,20 +31,36 @@ print(args)
 
 print("reading", fn)
 
-boundBox='-87.9, 24.2, -79.9, 31.1' 
+boundBox=[-122.55392149475273,
+            37.595686384771945,
+            -122.34243467834648,
+           37.83197310811593] 
+
+
 
 csvfile = open(fn)
 plantData = csv.DictReader(csvfile)
 dlList = []
 
+longmin="decimalLongitude > %s" % boundBox[0]
+latmin="decimalLatitude > %s" % boundBox[1]
+longmax="decimalLongitude < %s" % boundBox[2]
+latmax="decimalLatitude < %s" % boundBox[3]
+
 for row in plantData:
   sp_name="%s" % row['Scientific Name'] 
   print(sp_name)
   gbifSpcInfo=species.name_backbone(name = sp_name)
-  print(gbifSpcInfo['usageKey'])
+  try:
+      print(gbifSpcInfo['usageKey'])
+  except:
+        print(sp_name, "not found")
+        continue
+
   taxonKeySel="taxonKey = %s" % gbifSpcInfo['usageKey']
   print(taxonKeySel)
-  dl = occ.download( [ taxonKeySel, 'basisOfRecord = HUMAN_OBSERVATION', 'hasCoordinate = True', 'decimalLongitude > -87.9', 'decimalLongitude < -79.9', 'decimalLatitude > 24.2', 'decimalLatitude < 31.1' ])
+  dl = occ.download( [ taxonKeySel, 'basisOfRecord = HUMAN_OBSERVATION', 'hasCoordinate = True', latmin, longmin, latmax, longmax ])
+
   dlMeta = occ.download_meta(dl[0])
   print(dlMeta)
   while dlMeta['status'] != 'SUCCEEDED' and dlMeta['status'] != 'KILLED':
